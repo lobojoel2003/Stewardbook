@@ -86,8 +86,20 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci --no-audit --no-fund
+      - name: Cache Playwright browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
       - name: Install Chromium
-        run: npx playwright install --with-deps chromium
+        # Ubuntu mirrors occasionally answer 503; retry instead of failing the build.
+        run: |
+          for attempt in 1 2 3 4; do
+            npx playwright install --with-deps chromium && exit 0
+            echo "::warning::Browser install failed (attempt $attempt), retrying in $((attempt * 30))s"
+            sleep $((attempt * 30))
+          done
+          exit 1
       - name: Build
         run: npm run build
       - name: Run Playwright

@@ -1,0 +1,85 @@
+{
+	"name": "stewardbook",
+	"version": "1.0.0",
+	"description": "Grievance tracker for union stewards: contract-aware deadline clocks, one-tap case timelines, clean handoffs and a precedent library.",
+	"keywords": [
+		"union",
+		"labor",
+		"grievance",
+		"shop steward",
+		"collective bargaining",
+		"deadlines",
+		"pwa",
+		"sveltekit"
+	],
+	"homepage": "https://github.com/lobojoel2003/Stewardbook#readme",
+	"bugs": {
+		"url": "https://github.com/lobojoel2003/Stewardbook/issues"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/lobojoel2003/Stewardbook.git"
+	},
+	"license": "AGPL-3.0-or-later",
+	"author": "Joel Stain Lobo",
+	"private": true,
+	"type": "module",
+	"engines": {
+		"node": ">=22.12"
+	},
+	"imports": {
+		"#lib/*": "./src/lib/*"
+	},
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"start": "node build",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json && tsc -p src/service-worker/tsconfig.json --noEmit",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"lint": "prettier --check . && eslint .",
+		"format": "prettier --write .",
+		"test:unit": "vitest",
+		"test:coverage": "vitest run --coverage",
+		"test:e2e": "playwright test",
+		"test": "npm run test:unit -- --run && npm run build && npm run test:e2e",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:studio": "drizzle-kit studio",
+		"db:seed": "tsx --env-file-if-exists=.env scripts/seed.ts",
+		"release:patch": "npm version patch -m \"chore(release): v%s\"",
+		"release:minor": "npm version minor -m \"chore(release): v%s\"",
+		"release:major": "npm version major -m \"chore(release): v%s\""
+	},
+	"dependencies": {
+		"drizzle-orm": "^0.45.4",
+		"postgres": "^4.1.1",
+		"unpdf": "^1.9.1"
+	},
+	"devDependencies": {
+		"@eslint/js": "^10.0.1",
+		"@lucide/svelte": "^1.76.0",
+		"@playwright/test": "^1.65.1",
+		"@sveltejs/adapter-node": "^6.0.2",
+		"@sveltejs/kit": "^3.2.0",
+		"@sveltejs/vite-plugin-svelte": "^7.3.1",
+		"@types/node": "^22",
+		"@vitest/coverage-v8": "^5.1.1",
+		"drizzle-kit": "^0.31.11",
+		"eslint": "^10.15.0",
+		"eslint-config-prettier": "^10.1.8",
+		"eslint-plugin-svelte": "^3.24.1",
+		"globals": "^17.14.0",
+		"prettier": "^3.10.1",
+		"prettier-plugin-svelte": "^4.1.1",
+		"svelte": "^5.57.3",
+		"svelte-check": "^4.7.8",
+		"tsx": "^4.23.15",
+		"typescript": "^6.0.3",
+		"typescript-eslint": "^8.72.2",
+		"vite": "^8.3.8",
+		"vitest": "^5.1.0",
+		"zod": "^4.6.7"
+	}
+}

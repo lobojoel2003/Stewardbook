@@ -1,0 +1,17 @@
+# Package managers
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+bun.lock
+bun.lockb
+
+# Generated / vendored
+/build/
+/.svelte-kit/
+/drizzle/
+/static/
+/examples/
+/test-results/
+/playwright-report/
+/coverage/
+LICENSE

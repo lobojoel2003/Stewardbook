@@ -1,15 +1,15 @@
 name: Release
 
-# Publishing a version:
-#   npm run release:minor          # bumps package.json, commits "chore(release): vX.Y.Z", tags vX.Y.Z
-#   git push --follow-tags         # this workflow does the rest
+# Two ways to publish a version (both run the same pipeline):
+#   1. npm run release:minor && git push --follow-tags    # tag pushed from your machine
+#   2. Actions → Release → Run workflow, tag "vX.Y.Z"      # creates the annotated tag on the branch head
 on:
   push:
     tags: ['v[0-9]+.[0-9]+.[0-9]+', 'v[0-9]+.[0-9]+.[0-9]+-*']
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing tag to (re)release, e.g. v1.0.0'
+        description: 'Version tag, e.g. v1.0.0. Created as an annotated tag on the selected branch if it does not exist yet.'
         required: true
 
 permissions:
@@ -20,8 +20,43 @@ env:
   IMAGE: ghcr.io/${{ github.repository_owner }}/stewardbook
 
 jobs:
+  tag:
+    name: Ensure tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        if: github.event_name == 'workflow_dispatch'
+        with:
+          fetch-depth: 0
+      - name: Create the annotated tag if it doesn't exist
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TAG: ${{ inputs.tag }}
+          ACTOR: ${{ github.actor }}
+          ACTOR_ID: ${{ github.actor_id }}
+        run: |
+          set -euo pipefail
+          if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::'$TAG' is not a version tag like v1.2.3"; exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+            echo "Tag $TAG already exists — re-releasing it."; exit 0
+          fi
+          pkg=$(node -p "require('./package.json').version")
+          if [ "v$pkg" != "$TAG" ]; then
+            echo "::error::package.json is at $pkg; bump it before releasing $TAG"; exit 1
+          fi
+          git config user.name "$ACTOR"
+          git config user.email "${ACTOR_ID}+${ACTOR}@users.noreply.github.com"
+          git tag -a "$TAG" -m "Stewardbook $TAG" -m "$(node scripts/changelog-section.mjs "$TAG")"
+          git push origin "refs/tags/$TAG"
+          echo "Created annotated tag $TAG at $(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
+
   meta:
     name: Resolve version
+    needs: tag
     runs-on: ubuntu-latest
     outputs:
       tag: ${{ steps.v.outputs.tag }}

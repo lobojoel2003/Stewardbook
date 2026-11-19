@@ -46,4 +46,9 @@ The [release workflow](../.github/workflows/release.yml) then:
    and `build-N`, an SBOM and provenance, and a signed build attestation;
 5. publishes the GitHub Release with the changelog section as notes and the bundle attached.
 
-To rebuild a release (for example after fixing the workflow), run **Release → Run workflow** with the existing tag.
+### Releasing from GitHub instead
+
+**Actions → Release → Run workflow** on `main` with the tag (e.g. `v1.1.0`) does the same thing without pushing a tag
+from your machine: it checks that `package.json` already has that version, creates the annotated tag on the head of
+`main`, and runs the pipeline above. Run it with an existing tag to rebuild a release (for example after fixing the
+workflow).

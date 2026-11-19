@@ -1,0 +1,40 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 10
+    groups:
+      svelte:
+        patterns:
+          [
+            'svelte',
+            '@sveltejs/*',
+            'svelte-check',
+            'eslint-plugin-svelte',
+            'prettier-plugin-svelte'
+          ]
+      lint:
+        patterns:
+          [
+            'eslint',
+            '@eslint/*',
+            'typescript-eslint',
+            'eslint-config-prettier',
+            'prettier',
+            'globals'
+          ]
+      test:
+        patterns: ['vitest', '@vitest/*', '@playwright/test']
+      drizzle:
+        patterns: ['drizzle-orm', 'drizzle-kit']
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly

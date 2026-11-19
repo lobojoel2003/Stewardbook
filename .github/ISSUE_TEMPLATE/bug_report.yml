@@ -1,0 +1,38 @@
+name: Bug report
+description: Something isn't working, or a deadline was calculated wrong
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. **Never paste real grievance details, member names or contract text you aren't allowed to share.** Use made-up examples.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: deadline
+    attributes:
+      label: Deadline details (if it's a date problem)
+      description: Start date, number of days, working or calendar days, the holidays involved, and the due date you expected.
+      placeholder: '10 working days from Mon Nov 16, 2026 with Thanksgiving and the day after as holidays → expected Wed Dec 2, got …'
+  - type: input
+    id: version
+    attributes:
+      label: Version and build
+      description: Shown at the bottom of the sidebar and in Settings → About (e.g. v1.0.0 · build 42 · abc1234).
+    validations:
+      required: true
+  - type: dropdown
+    id: install
+    attributes:
+      label: How do you run Stewardbook?
+      options: [Docker image, docker compose, Node bundle, From source]
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and device
+      placeholder: Safari on iPhone 15, Chrome 140 on Windows…

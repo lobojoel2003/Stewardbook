@@ -1,0 +1,20 @@
+name: Feature request
+description: Something that would help stewards in your local
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve on the shop floor?
+      description: Describe the situation a steward is in, not just the feature.
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would help?
+  - type: textarea
+    id: contract
+    attributes:
+      label: Contract language (if relevant)
+      description: Paraphrase or use a fictional example if your contract isn't public.

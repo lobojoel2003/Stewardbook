@@ -1,0 +1,57 @@
+# Stewardbook + Postgres on one machine.
+#
+#   docker compose up -d                      # build from source and start
+#   STEWARDBOOK_IMAGE=ghcr.io/lobojoel2003/stewardbook:latest docker compose up -d --no-build
+#   docker compose --profile ai up -d         # also start a local Ollama for contract drafting
+#
+# Then open http://localhost:3000 and follow the one-time setup.
+
+name: stewardbook
+
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: stewardbook
+      POSTGRES_USER: stewardbook
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U stewardbook -d stewardbook']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  app:
+    image: ${STEWARDBOOK_IMAGE:-stewardbook:local}
+    build:
+      context: .
+      args:
+        APP_VERSION: ${APP_VERSION:-}
+        BUILD_NUMBER: ${BUILD_NUMBER:-local}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://stewardbook:${POSTGRES_PASSWORD:-change-me}@db:5432/stewardbook
+      # The public URL people use to reach Stewardbook. Form submissions are rejected if it is wrong.
+      ORIGIN: ${ORIGIN:-http://localhost:3000}
+      DEFAULT_TIMEZONE: ${DEFAULT_TIMEZONE:-America/New_York}
+      LLM_BASE_URL: ${LLM_BASE_URL:-}
+      LLM_MODEL: ${LLM_MODEL:-llama3.1:8b}
+    ports:
+      - '${PORT:-3000}:3000'
+
+  ollama:
+    image: ollama/ollama:latest
+    profiles: [ai]
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+
+volumes:
+  pgdata:
+  ollama:

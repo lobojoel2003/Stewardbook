@@ -3,16 +3,21 @@
 # Stewardbook production image.
 #   docker build -t stewardbook --build-arg APP_VERSION=1.0.0 --build-arg BUILD_NUMBER=42 .
 #   docker run -p 3000:3000 -e DATABASE_URL=postgres://… -e ORIGIN=https://stewardbook.example.org stewardbook
+#
+# Multi-arch builds stay fast: dependencies are installed and the app is built once on the
+# build machine's own platform ($BUILDPLATFORM), and the result is copied into each target
+# platform's runtime image. That works because every production dependency is pure
+# JavaScript, so nothing has to run under emulation.
 
 ARG NODE_VERSION=22
 
-# ── Dependencies ──────────────────────────────────────────────────────────────
-FROM node:${NODE_VERSION}-alpine AS deps
+# ── Dependencies (native platform) ────────────────────────────────────────────
+FROM --platform=$BUILDPLATFORM node:${NODE_VERSION}-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json .npmrc ./
 RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
-# ── Build ─────────────────────────────────────────────────────────────────────
+# ── Build (native platform) ───────────────────────────────────────────────────
 FROM deps AS build
 ARG APP_VERSION
 ARG BUILD_NUMBER=docker
@@ -23,9 +28,13 @@ ENV APP_VERSION=${APP_VERSION} \
     GIT_SHA=${GIT_SHA} \
     BUILD_DATE=${BUILD_DATE}
 COPY . .
-RUN npm run build && npm prune --omit=dev --no-audit --no-fund
+RUN npm run build \
+ && npm prune --omit=dev --no-audit --no-fund \
+ && if find node_modules -name '*.node' | grep -q .; then \
+      echo 'A production dependency ships a native binary; it must be installed per target platform.' >&2; exit 1; \
+    fi
 
-# ── Runtime ───────────────────────────────────────────────────────────────────
+# ── Runtime (target platform) ─────────────────────────────────────────────────
 FROM node:${NODE_VERSION}-alpine AS runtime
 ARG APP_VERSION
 ARG BUILD_NUMBER=docker

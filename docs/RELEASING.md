@@ -50,5 +50,6 @@ The [release workflow](../.github/workflows/release.yml) then:
 
 **Actions → Release → Run workflow** on `main` with the tag (e.g. `v1.1.0`) does the same thing without pushing a tag
 from your machine: it checks that `package.json` already has that version, creates the annotated tag on the head of
-`main`, and runs the pipeline above. Run it with an existing tag to rebuild a release (for example after fixing the
-workflow).
+`main`, and runs the pipeline above. Run it with an existing tag to rebuild a release, or tick **retag** to move a tag whose release
+failed before anything was published onto a fixed commit (the workflow refuses if a release for that tag already
+exists).

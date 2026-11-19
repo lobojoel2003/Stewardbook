@@ -11,6 +11,10 @@ on:
       tag:
         description: 'Version tag, e.g. v1.0.0. Created as an annotated tag on the selected branch if it does not exist yet.'
         required: true
+      retag:
+        description: 'Retry a failed release: move an existing tag that has no published release to the selected branch head.'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -34,15 +38,25 @@ jobs:
         if: github.event_name == 'workflow_dispatch'
         env:
           TAG: ${{ inputs.tag }}
+          RETAG: ${{ inputs.retag }}
           ACTOR: ${{ github.actor }}
           ACTOR_ID: ${{ github.actor_id }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           if ! [[ "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::'$TAG' is not a version tag like v1.2.3"; exit 1
           fi
+          force=()
           if git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
-            echo "Tag $TAG already exists — re-releasing it."; exit 0
+            if [ "$RETAG" != "true" ]; then
+              echo "Tag $TAG already exists — re-releasing it."; exit 0
+            fi
+            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+              echo "::error::$TAG already has a published release. Release a new version instead of moving the tag."; exit 1
+            fi
+            echo "Moving unreleased tag $TAG to $(git rev-parse --short HEAD)"
+            force=(--force)
           fi
           pkg=$(node -p "require('./package.json').version")
           if [ "v$pkg" != "$TAG" ]; then
@@ -50,8 +64,8 @@ jobs:
           fi
           git config user.name "$ACTOR"
           git config user.email "${ACTOR_ID}+${ACTOR}@users.noreply.github.com"
-          git tag -a "$TAG" -m "Stewardbook $TAG" -m "$(node scripts/changelog-section.mjs "$TAG")"
-          git push origin "refs/tags/$TAG"
+          git tag "${force[@]}" -a "$TAG" -m "Stewardbook $TAG" -m "$(node scripts/changelog-section.mjs "$TAG")"
+          git push "${force[@]}" origin "refs/tags/$TAG"
           echo "Created annotated tag $TAG at $(git rev-parse --short HEAD)" >> "$GITHUB_STEP_SUMMARY"
 
   meta:
@@ -93,6 +107,7 @@ jobs:
     name: Node bundle
     needs: [meta, verify]
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
         with:
@@ -136,6 +151,7 @@ jobs:
     name: Container image
     needs: [meta, verify]
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       packages: write

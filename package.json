@@ -55,7 +55,7 @@
 	"dependencies": {
 		"drizzle-orm": "^0.45.4",
 		"postgres": "^4.1.1",
-		"unpdf": "^1.9.1"
+		"unpdf": "^2.2.1"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
